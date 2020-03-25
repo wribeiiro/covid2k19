@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Covid 2k19</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: #EEEEEE;
+            min-height: 100vh; 
+            background:linear-gradient(rgba(0,0,0, 0.6),rgba(0,0,0, 0.6)),
+            url('https://ewscripps.brightspotcdn.com/dims4/default/784ed11/2147483647/strip/true/crop/1280x720+0+0/resize/1280x720!/quality/90/?url=https%3A%2F%2Fewscripps.brightspotcdn.com%2F63%2F5c%2F7db696744a1680623e5a66cdf44c%2Fcoronavirus-covid-19-background.jpg') repeat;
+            background-position:center top;
+            background-attachment:fixed;
+            background-size:cover;
+        }
+
+        .container-fluid, .content-countries {
+            margin-top: 80px;
+        }
+
+        .search {
+            margin-top: 20px;
+        }
+
+        h1, div.loading {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="text-center font-weight-bold">
+            <h1>COVID 2k19 GLOBAL OCCURRENCES</h1>
+            
+            <input class="form-control search" type="text" placeholder="Type some for searching">
+        </div>
+
+        <div class="text-center loading"></div>
+        <div class="row content-countries"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"  crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        function getImageCountry(name) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    type: "GET",
+                    url: `https://restcountries.eu/rest/v2/name/${name}`,
+                    success: (response) => {
+                        resolve(response)
+                    },
+                    error: (error) => {
+                        resolve(null)
+                    }
+                })
+            })
+        }
+
+        async function setCountries(jsonData)  {
+            let template   = ``;
+            let arrayImage = [];
+
+            if (jsonData) {
+
+                $.each (jsonData, (index, el) => {
+
+                    const totalConfirmed = el.reduce((total, x) => total + x.confirmed, 0)
+                    const totalDeaths    = el.reduce((total, x) => total + x.deaths, 0)
+                    const totalRecovered = el.reduce((total, x) => total + x.recovered, 0)
+                    const flag           = index.replace(' ', '-').toLowerCase()
+ 
+                    template += `
+                    <div class="col-md-4 form-group countries">
+                        <div class="card">
+                            <div class="card-header font-weight-bold text-center countries-label"> 
+                                ${index.toUpperCase()} &nbsp; <i class="fa fa-flag"></i>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        Confirmed <br> 
+                                        <span class="font-weight-bold">${totalConfirmed}</span>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        Deaths <br>
+                                        <span class="font-weight-bold">${totalDeaths}</span>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        Recovered <br>
+                                        <span class="font-weight-bold">${totalRecovered}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`
+                })
+
+                $('.content-countries').html(template)
+            }
+        }
+
+        function requestCovid() {
+            $.ajax({
+                type: "GET",
+                url: "https://pomber.github.io/covid19/timeseries.json",
+                success: (response) => {
+                    setCountries(response)
+                },
+                error: (error) => {
+                    $('.loading').text('On error ocurred, sorry')
+                },
+                beforeSend: (before) => {
+                    $('.loading').html('Fetching data, please wait &nbsp; <i class="fa fa-spinner fa-spin"></i>')
+                },
+                complete: () => {
+                    setTimeout(requestCovid, 60000);
+
+                    $('.loading').text('')
+                }
+            });
+        }
+
+        $(document).ready(() => {
+            requestCovid()
+        })
+
+        $('.search').keyup(function() {
+            const text = $(this).val().toLowerCase()
+
+            $(".countries").css("display", "block");
+
+            $(".countries").each(function() {
+                if ($(this).text().trim().toLowerCase().indexOf(text) < 0) {
+                    $(this).css("display", "none"); 
+                }
+            });
+        })
+    </script>
+</body>
+</html>
